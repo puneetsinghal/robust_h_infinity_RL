@@ -3,13 +3,13 @@
 % clc
 
 global w tspan
-tspan  = 0:0.03:100 ;
-x0     = rand(4,1)   
-
+tspan  = 0:0.033:100 ;
+x0     = rand(4,1); 
+% x0 = randi([-3,3], [4,1]);
 load theta_current2.mat 
 
 global theta_current
-[t,x]  = ode45(@dynamics,tspan,x0);
+[t,x]  = ode23s(@dynamics,tspan,x0);
 
 figure(1)
 plot(t,x(:,1),'-b')

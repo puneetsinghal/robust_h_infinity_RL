@@ -21,14 +21,15 @@ W = zeros(numData,1);
 X = zeros(numData,4);
 
 inputIndex = [];
-for j = 1 : floor(numData/T)
+tspa
+for j = 1 : 300%floor(numData/T)
     x0     = rand(4,1);
 %     u      = 0.5*control_generator*rand(size(control_generator,2),1);
 %     newIndex = randi(numFunctions);
 %     inputIndex = [inputIndex; newIndex];
 %     u      = control_generator(:, newIndex);
-    u = sin(((j))*pi*tspan);
-    w      = 0.5*rand(length(tspan),1);
+%     u = sin(((j))*pi*tspan);
+%     w      = 0.5*rand(length(tspan),1);
     [~,x]  = ode45(@dynamicsknown,tspan,x0);
     
 %     x0 = x(end,:);

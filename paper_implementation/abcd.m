@@ -24,16 +24,15 @@ for a = 1 : length(setA)
 end
 
 
-
+%%
 syms x1 x2 x3 x4 'real'
 
-for i = 1 : size(combination,1)   
-sigmaL(i) = (x1^(combination(i,1)))*(x2^(combination(i,2)))*(x3^(combination(i,3)))*(x4^(combination(i,4)));
-end
+% for i = 1 : size(combination,1)
+%     sigmaL(i) = (x1^(combination(i,1)))*(x2^(combination(i,2)))*(x3^(combination(i,3)))*(x4^(combination(i,4)));
+% end
 
+sigmaL = activationFunction(x1, x2, x3, x4);
 f =  matlabFunction(sigmaL,'File','sigmaL');
-
-
 
 JsigmaL = jacobian(sigmaL,[x1,x2,x3,x4]);
 
