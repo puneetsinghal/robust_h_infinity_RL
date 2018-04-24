@@ -1,6 +1,5 @@
-function xdot = dynamicsknown(t,x)
+function xdot = dynamicsknown(t, x, u, w, tspan)
 
-global w u tspan
 
 ut = interp1(tspan,u,t);
 wt = interp1(tspan,w,t);

@@ -1,6 +1,7 @@
 import numpy as np
 
-def generateInputFunction(T):
+def generateInputFunction(tspan):
+	T = tspan.size
 	I1 = np.identity(T)
 	KK = np.linspace(1,20,20,True).reshape(1,20)
 
@@ -14,7 +15,7 @@ def generateInputFunction(T):
 	control_generator = np.hstack((control_generator, np.exp(-np.pi*tspan.reshape(T,1)*KK)))
 
 	return control_generator
-	
+
 def sigmaL(x):
 
 	x1 = x[0]

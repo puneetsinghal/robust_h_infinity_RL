@@ -5,6 +5,7 @@ from scipy import integrate as SCI_INT
 from IPython import embed
 from time import sleep
 from helper_functions import *
+from copy import copy 
 
 M  = 20
 dt = 0.033
@@ -72,11 +73,11 @@ def generateSystemData(control_generator, T, M, DIM):
 
 		print(j)
 
-	systemDataFile = h5py.File('systemData3.h5', 'w') 
-	systemDataFile.create_dataset('U', data=U)
-	systemDataFile.create_dataset('W', data=W)
-	systemDataFile.create_dataset('X', data=X)
-	systemDataFile.close()
+	file = h5py.File('systemData3.h5', 'w') 
+	file.create_dataset('U', data=U)
+	file.create_dataset('W', data=W)
+	file.create_dataset('X', data=X)
+	file.close()
 
 	return U, W, X
 
@@ -121,24 +122,71 @@ def generateRhoMatrices(U, W, X):
 		rho_wphi[t,:]     	= (wt*np.matmul(kt.T, Jt.T) + wt1*np.matmul(kt1.T, Jt1.T))*dt/2					# T x L
 		rho_h[t,:]        	= ((ht*ht)+(ht1*ht1))*dt/2								# T x 1
 
-	systemDataFile = h5py.File('matrices_data3.h5', 'w') 
-	systemDataFile.create_dataset('rho_delphi', data=rho_delphi)
-	systemDataFile.create_dataset('rho_gdelphi', data=rho_gdelphi)
-	systemDataFile.create_dataset('rho_kdelphi', data=rho_kdelphi)
-	systemDataFile.create_dataset('rho_uphi', data=rho_uphi)
-	systemDataFile.create_dataset('rho_wphi', data=rho_wphi)
-	systemDataFile.create_dataset('rho_h', data=rho_h)
-
-	systemDataFile.close()
+	file = h5py.File('matrices_data3.h5', 'w') 
+	file.create_dataset('rho_delphi', data=rho_delphi)
+	file.create_dataset('rho_gdelphi', data=rho_gdelphi)
+	file.create_dataset('rho_kdelphi', data=rho_kdelphi)
+	file.create_dataset('rho_uphi', data=rho_uphi)
+	file.create_dataset('rho_wphi', data=rho_wphi)
+	file.create_dataset('rho_h', data=rho_h)
+	file.close()
 
 	return rho_delphi, rho_gdelphi, rho_kdelphi, rho_uphi, rho_wphi, rho_h
+
+def calculateWeights(rho_delphi, rho_gdelphi, rho_kdelphi, rho_uphi, rho_wphi, rho_h):
+	T = rho_h.shape[0]
+	xtry  = np.array([0,0,0,0])
+	NN = sigmaL(xtry)
+	L = NN.size
+
+	eta = np.zeros([T,1])
+	Z   = np.zeros([T,L])
+
+	epsilon  = 0.01             
+
+	theta_previous = np.zeros([L,1]) 
+
+	gamma = 6                
+
+	H = np.random.randint(1,T, 10000)   
+	theta_updates = []
+	for i in range(700):
+		for ll in range(H.size):
+			t = H[ll]
+			# embed()
+			rho_i  		= rho_uphi[t,:] + 0.5*np.matmul(theta_previous.T, rho_gdelphi[t,:,:].reshape(L,L)) + rho_wphi[t,:]
+			rho_i 		+=  -0.5*(1/(gamma**2) * np.matmul(theta_previous.T, rho_kdelphi[t,:,:].reshape(L,L))) + rho_delphi[t,:] 		# T x L x M
+			pi_i 		= 0.25*np.matmul(np.matmul(theta_previous.T, rho_gdelphi[t,:,:].reshape(L,L)), theta_previous) 
+			pi_i 		+= -0.25*(1/(gamma**2)) * np.matmul(np.matmul(theta_previous.T, rho_kdelphi[t,:,:].reshape(L,L)), theta_previous) + rho_h[t,:]          # T x 1 x M
+			Z[t,:] 		= rho_i
+			eta[t,:] 	= pi_i  
+
+		Ztrans = Z.T
+		theta_current = np.matmul(np.linalg.inv(np.matmul(Ztrans,Z)), np.matmul(Ztrans, eta)) 
+		theta_updates.append(theta_current)
+		print("error: {}".format(np.linalg.norm(theta_current - theta_previous)))
+
+		if(np.linalg.norm(theta_current - theta_previous)<epsilon):
+			break
+
+		theta_previous = copy(theta_current)            
+
+	file = h5py.File('theta_current3.h5', 'w') 
+	file.create_dataset('theta_current', data=theta_current)
+	file.create_dataset('theta_updates', data=theta_updates)
+	file.close()
 	
+	return theta_current, theta_updates
+
 if __name__ == '__main__':
 	L = sigmaL(np.zeros(DIM)).size
 
-	control_generator = generateInputFunction(T)
+	control_generator = generateInputFunction(tspan)
 
 	U, W, X = generateSystemData(control_generator, T, M, DIM)
 
 	rho_delphi, rho_gdelphi, rho_kdelphi, rho_uphi, rho_wphi, rho_h = generateRhoMatrices(U, W, X)
 
+	theta_current, theta_updates = calculateWeights(rho_delphi, rho_gdelphi, rho_kdelphi, rho_uphi, rho_wphi, rho_h)
+
+	embed()
