@@ -2,7 +2,7 @@ import numpy as np
 from scipy import integrate as SCI_INT
 import h5py
 
-class LinearSystem(object):
+class RTAC(object):
 	def __init__(self, DIM, tspan, u, w, nn):
 		self.DIM = DIM
 		self.tspan = tspan

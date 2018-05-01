@@ -26,7 +26,7 @@ except ImportError:
 
 from Network import Network
 from Logger import Logger
-from robot import LinearSystem as LS
+from robot import RTAC as RTAC
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 config = tf.ConfigProto()
@@ -192,7 +192,7 @@ if __name__=='__main__':
 	
 	
 	nn = Network(params)
-	robot = LS(DIM, tspan, u, w, nn)
+	robot = RTAC(DIM, tspan, u, w, nn)
 	#     L = sigmaL(np.zeros(DIM)).size
 	if(args.mode == 'train'):
 		log_dir 	= make_log_dir('')
