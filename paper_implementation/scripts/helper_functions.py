@@ -5,8 +5,6 @@ def generateInputFunction(tspan):
 	I1 = np.identity(T)
 	KK = np.linspace(1,20,20,True).reshape(1,20)
 
-	# embed()
-
 	control_generator = I1[:,0].reshape(T,1)*KK
 	control_generator = np.hstack((control_generator, -I1[:,0].reshape(T,1)*KK))
 	control_generator = np.hstack((control_generator, np.random.rand(T,1)))
@@ -43,7 +41,6 @@ def k_function(x, DIM):
 
 	epsilon = 0.2  
 	D = 1-(epsilon*np.cos(x3))**2
-
 
 	k = np.array([0, 1/D, 0, -epsilon*np.cos(x3)/D]).reshape(DIM,1)
 	return k

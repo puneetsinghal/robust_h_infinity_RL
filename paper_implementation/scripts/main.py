@@ -63,7 +63,7 @@ def generateSystemData(control_generator, T, M, DIM):
 		r.set_initial_value(x0, 0)
 		for i in range(1, T):
 			# embed()
-			x[i, :] = r.integrate(r.t+dt)	 # get one more value, add it to the array
+			x[i, :] = r.integrate(r.t+dt)    # get one more value, add it to the array
 			if not r.successful():
 				raise RuntimeError("Could not integrate")
 		# embed()
@@ -87,12 +87,12 @@ def generateRhoMatrices(U, W, X):
 	NN = sigmaL(xtry)
 	L = NN.size
 
-	rho_delphi		= np.zeros([T-1,L])   # T x L
-	rho_gdelphi		= np.zeros([T-1,L,L]) # T x L x L
-	rho_kdelphi		= np.zeros([T-1,L,L]) # T x L x L
-	rho_uphi		= np.zeros([T-1,L])   # T x L
-	rho_wphi		= np.zeros([T-1,L])   # T x L
-	rho_h			= np.zeros([T-1,1])   # T x 1
+	rho_delphi      = np.zeros([T-1,L])   # T x L
+	rho_gdelphi     = np.zeros([T-1,L,L]) # T x L x L
+	rho_kdelphi     = np.zeros([T-1,L,L]) # T x L x L
+	rho_uphi        = np.zeros([T-1,L])   # T x L
+	rho_wphi        = np.zeros([T-1,L])   # T x L
+	rho_h           = np.zeros([T-1,1])   # T x 1
 
 	for t in range(T-1):
 		# sleep(0.001)
@@ -115,12 +115,12 @@ def generateRhoMatrices(U, W, X):
 		wt      =  W[t]
 		wt1     =  W[t+1]
 		# embed()
-		rho_delphi[t,:]   	= phit-phit1											# T x L
-		rho_gdelphi[t,:,:]	= (np.matmul(np.matmul(Jt, gt*gt.T), Jt.T) + np.matmul(np.matmul(Jt1, gt1*gt1.T), Jt1.T))*dt/2		# T x L x L
-		rho_kdelphi[t,:,:]	= (np.matmul(np.matmul(Jt, kt*kt.T), Jt.T) + np.matmul(np.matmul(Jt1, kt1*kt1.T), Jt1.T))*dt/2		# T x L x L
-		rho_uphi[t,:]     	= (ut*np.matmul(gt.T, Jt.T) + ut1*np.matmul(gt1.T, Jt1.T))*dt/2					# T x L
-		rho_wphi[t,:]     	= (wt*np.matmul(kt.T, Jt.T) + wt1*np.matmul(kt1.T, Jt1.T))*dt/2					# T x L
-		rho_h[t,:]        	= ((ht*ht)+(ht1*ht1))*dt/2								# T x 1
+		rho_delphi[t,:]     = phit-phit1                                            # T x L
+		rho_gdelphi[t,:,:]  = (np.matmul(np.matmul(Jt, gt*gt.T), Jt.T) + np.matmul(np.matmul(Jt1, gt1*gt1.T), Jt1.T))*dt/2      # T x L x L
+		rho_kdelphi[t,:,:]  = (np.matmul(np.matmul(Jt, kt*kt.T), Jt.T) + np.matmul(np.matmul(Jt1, kt1*kt1.T), Jt1.T))*dt/2      # T x L x L
+		rho_uphi[t,:]       = (ut*np.matmul(gt.T, Jt.T) + ut1*np.matmul(gt1.T, Jt1.T))*dt/2                 # T x L
+		rho_wphi[t,:]       = (wt*np.matmul(kt.T, Jt.T) + wt1*np.matmul(kt1.T, Jt1.T))*dt/2                 # T x L
+		rho_h[t,:]          = ((ht*ht)+(ht1*ht1))*dt/2                              # T x 1
 
 	file = h5py.File('matrices_data3.h5', 'w') 
 	file.create_dataset('rho_delphi', data=rho_delphi)
@@ -154,12 +154,12 @@ def calculateWeights(rho_delphi, rho_gdelphi, rho_kdelphi, rho_uphi, rho_wphi, r
 		for ll in range(H.size):
 			t = H[ll]
 			# embed()
-			rho_i  		= rho_uphi[t,:] + 0.5*np.matmul(theta_previous.T, rho_gdelphi[t,:,:].reshape(L,L)) + rho_wphi[t,:]
-			rho_i 		+=  -0.5*(1/(gamma**2) * np.matmul(theta_previous.T, rho_kdelphi[t,:,:].reshape(L,L))) + rho_delphi[t,:] 		# T x L x M
-			pi_i 		= 0.25*np.matmul(np.matmul(theta_previous.T, rho_gdelphi[t,:,:].reshape(L,L)), theta_previous) 
-			pi_i 		+= -0.25*(1/(gamma**2)) * np.matmul(np.matmul(theta_previous.T, rho_kdelphi[t,:,:].reshape(L,L)), theta_previous) + rho_h[t,:]          # T x 1 x M
-			Z[t,:] 		= rho_i
-			eta[t,:] 	= pi_i  
+			rho_i       = rho_uphi[t,:] + 0.5*np.matmul(theta_previous.T, rho_gdelphi[t,:,:].reshape(L,L)) + rho_wphi[t,:]
+			rho_i       +=  -0.5*(1/(gamma**2) * np.matmul(theta_previous.T, rho_kdelphi[t,:,:].reshape(L,L))) + rho_delphi[t,:]        # T x L x M
+			pi_i        = 0.25*np.matmul(np.matmul(theta_previous.T, rho_gdelphi[t,:,:].reshape(L,L)), theta_previous) 
+			pi_i        += -0.25*(1/(gamma**2)) * np.matmul(np.matmul(theta_previous.T, rho_kdelphi[t,:,:].reshape(L,L)), theta_previous) + rho_h[t,:]          # T x 1 x M
+			Z[t,:]      = rho_i
+			eta[t,:]    = pi_i  
 
 		Ztrans = Z.T
 		theta_current = np.matmul(np.linalg.inv(np.matmul(Ztrans,Z)), np.matmul(Ztrans, eta)) 
