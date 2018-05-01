@@ -16,17 +16,14 @@ class RTAC(object):
 		ut = np.interp(t, self.tspan, self.u)
 		wt = np.interp(t, self.tspan, self.w)
 
-		epsilon = 0.2
 		x1 = x[0]
 		x2 = x[1]
 		x3 = x[2]
-		x4 = x[3]
 		# embed()
 
-		D = 1. - (epsilon*np.cos(x3))**2
-		f = np.array([x2, (-x1+epsilon*x4**2*np.sin(x3))/D, x4, epsilon*np.cos(x3)*(x1 - epsilon*x4**2*np.sin(x3))/D])
-		g = np.array([0, -epsilon*np.cos(x3)/D, 0, 1/D])
-		k = np.array([0, 1/D, 0, -epsilon*np.cos(x3)/D])
+		f = np.array([-1.01887*x1 + 0.90506*x2 -0.00215*x3 , 0.8225*x1 - 1.07741*x2 - 0.17555*x3, -x3])
+		g = np.array([0,0,1])
+		k = np.array([1,0,0])
 		# embed()
 
 		# ut   = -0.5*g.T*JsigmaL(x).T*theta_current
@@ -78,17 +75,14 @@ class RTAC(object):
 		x1 = x[0]
 		x2 = x[1]
 		x3 = x[2]
-		x4 = x[3]
 
-		epsilon = 0.2 ; 
-		D = 1. - (epsilon*np.cos(x3))**2
-		f = np.array([x2, (-x1+epsilon*x4**2*np.sin(x3))/D, x4, epsilon*np.cos(x3)*(x1 - epsilon*x4**2*np.sin(x3))/D])
-		g = np.array([0, -epsilon*np.cos(x3)/D, 0, 1/D])
-		k = np.array([0, 1/D, 0, -epsilon*np.cos(x3)/D])
+		f = np.array([-1.01887*x1 + 0.90506*x2 -0.00215*x3 , 0.8225*x1 - 1.07741*x2 - 0.17555*x3, -x3])
+		g = np.array([0,0,1])
+		k = np.array([1,0,0])
 		
 		grad = self.sess.run(self.nn.value_grad_t,feed_dict={self.nn.X_t:x.reshape(1,self.DIM), self.nn.X_tPlus:x.reshape(1,self.DIM)})
-		u   = -0.5*np.matmul(g.reshape(1,4), grad.reshape(self.DIM,1))
-		d   = 0.0*np.exp(-0.1*t)*np.sin(t)
+		u   = -0.5*np.matmul(g.reshape(1,3), grad.reshape(self.DIM,1))
+		d   = 4*np.exp(-0.1*t)*np.sin(t)
 	#     print(u)
 		xdot = f + g*u + k*d
 	#     print(xdot)

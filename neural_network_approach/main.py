@@ -37,8 +37,8 @@ config.gpu_options.per_process_gpu_memory_fraction = 1
 SESS = tf.Session(config=config)
 
 M  = 20
-dt = 0.033
-DIM = 4
+dt = 0.01
+DIM = 3
 
 tspan = np.arange(0,60,dt) 
 
@@ -132,14 +132,14 @@ def train(robot, log_dir):
 	save_path = saver.save(SESS, modelName, write_meta_graph=True)
 
 def test(robot, SESS, log_dir, avoidInit = False):
-	x0     = np.random.rand(DIM)
+	x0     = 10*np.random.rand(DIM)
 
 	newT = 100
-	dt = 0.033
+	dt = 0.01
 
 	totalPoints = int(newT/dt)
 
-	x = np.zeros([totalPoints,4])
+	x = np.zeros([totalPoints,3])
 	x[0,:] = x0
 	robot.sess = SESS
 
@@ -170,7 +170,6 @@ def test(robot, SESS, log_dir, avoidInit = False):
 	plt.plot(t,x[:,0],'-b','linewidth',1.8)
 	plt.plot(t,x[:,1],'-r','linewidth',1.8)
 	plt.plot(t,x[:,2],'-m','linewidth',1.8)
-	plt.plot(t,x[:,3],'-k','linewidth',1.8)
 	plt.show()
 
 if __name__=='__main__':
@@ -183,8 +182,8 @@ if __name__=='__main__':
 
 	params = {}
 	params['hiddenSize'] = 8
-	params['dt'] = 0.033
-	params['learningRate'] = 1e-2
+	params['dt'] = 0.01
+	params['learningRate'] = 1e-3
 	params['gamma'] = 6
 	params['numState'] = DIM
 	params['action_size'] = 1

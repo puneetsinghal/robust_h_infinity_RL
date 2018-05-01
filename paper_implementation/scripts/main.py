@@ -8,8 +8,8 @@ from helper_functions import *
 from copy import copy 
 
 M  = 20
-dt = 0.033
-DIM = 4
+dt = 0.01
+DIM = 3
 
 tspan = np.arange(0,60,dt) 
 
@@ -27,16 +27,11 @@ def dynamicsknown(t, x):
 	x1 = x[0]
 	x2 = x[1]
 	x3 = x[2]
-	x4 = x[3]
 	# embed()
 
-	D = 1. - (epsilon*np.cos(x3))**2
-	f = np.array([x2, (-x1+epsilon*x4**2*np.sin(x3))/D, x4, epsilon*np.cos(x3)*(x1 - epsilon*x4**2*np.sin(x3))/D])
-	g = np.array([0, -epsilon*np.cos(x3)/D, 0, 1/D])
-	k = np.array([0, 1/D, 0, -epsilon*np.cos(x3)/D])
-	# embed()
-
-	# ut   = -0.5*g.T*JsigmaL(x).T*theta_current
+	f = np.array([-1.01887*x1 + 0.90506*x2 -0.00215*x3 , 0.8225*x1 - 1.07741*x2 - 0.17555*x3, -x3])
+	g = np.array([0,0,1])
+	k = np.array([1,0,0])
 
 	xdot = f + g*ut + k*wt
 	return xdot
@@ -83,7 +78,7 @@ def generateSystemData(control_generator, T, M, DIM):
 
 def generateRhoMatrices(U, W, X):
 	T = U.shape[0]
-	xtry  = np.array([0,0,0,0])
+	xtry  = np.array([0,0,0])
 	NN = sigmaL(xtry)
 	L = NN.size
 
@@ -135,7 +130,7 @@ def generateRhoMatrices(U, W, X):
 
 def calculateWeights(rho_delphi, rho_gdelphi, rho_kdelphi, rho_uphi, rho_wphi, rho_h):
 	T = rho_h.shape[0]
-	xtry  = np.array([0,0,0,0])
+	xtry  = np.array([0,0,0])
 	NN = sigmaL(xtry)
 	L = NN.size
 

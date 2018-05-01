@@ -37,12 +37,9 @@ def k_function(x, DIM):
 	x1 = x[0]
 	x2 = x[1]
 	x3 = x[2]
-	x4 = x[3]
 
-	epsilon = 0.2  
-	D = 1-(epsilon*np.cos(x3))**2
 
-	k = np.array([0, 1/D, 0, -epsilon*np.cos(x3)/D]).reshape(DIM,1)
+	k = np.array([1,0,0]).reshape(DIM,1)
 	return k
 
 def h_function(x, DIM):
@@ -56,11 +53,8 @@ def g_function(x, DIM):
 	x1 = x[0]
 	x2 = x[1]
 	x3 = x[2]
-	x4 = x[3]
 
-	epsilon = 0.2  
-	D = 1-(epsilon*np.cos(x3))**2
-	g = np.array([0, -epsilon*np.cos(x3)/D, 0, 1/D]).reshape(DIM,1)
+	g = np.array([0,0,1]).reshape(DIM,1)
 	return g
 
 def JsigmaL(x, DIM):
