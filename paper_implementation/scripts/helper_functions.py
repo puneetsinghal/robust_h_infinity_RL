@@ -1,19 +1,5 @@
 import numpy as np
 
-def generateInputFunction(tspan):
-	T = tspan.size
-	I1 = np.identity(T)
-	KK = np.linspace(1,20,20,True).reshape(1,20)
-
-	control_generator = I1[:,0].reshape(T,1)*KK
-	control_generator = np.hstack((control_generator, -I1[:,0].reshape(T,1)*KK))
-	control_generator = np.hstack((control_generator, np.random.rand(T,1)))
-	control_generator = np.hstack((control_generator, np.sin(np.pi*tspan.reshape(T,1)*KK)))
-	control_generator = np.hstack((control_generator, np.cos(np.pi*tspan.reshape(T,1)*KK)))
-	control_generator = np.hstack((control_generator, np.exp(-np.pi*tspan.reshape(T,1)*KK)))
-
-	return control_generator
-
 def sigmaL(x):
 
 	x1 = x[0]
@@ -32,36 +18,6 @@ def sigmaL(x):
 				t3*t5, t3, t4*x2*x3, t4*x2*x4, t5*x2*x3, x2*x3, t5*x2*x4, x2*x4, t4**2, t4*x3*x4, t4*t5,
 				t4, t5*x3*x4, x3*x4, t5**2, t5])
 	return sigL
-
-def k_function(x, DIM):
-	x1 = x[0]
-	x2 = x[1]
-	x3 = x[2]
-	x4 = x[3]
-
-	epsilon = 0.2  
-	D = 1-(epsilon*np.cos(x3))**2
-
-	k = np.array([0, 1/D, 0, -epsilon*np.cos(x3)/D]).reshape(DIM,1)
-	return k
-
-def h_function(x, DIM):
-
-	z = np.sqrt(0.1)*x
-
-	h = np.linalg.norm(z)
-	return h
-
-def g_function(x, DIM):
-	x1 = x[0]
-	x2 = x[1]
-	x3 = x[2]
-	x4 = x[3]
-
-	epsilon = 0.2  
-	D = 1-(epsilon*np.cos(x3))**2
-	g = np.array([0, -epsilon*np.cos(x3)/D, 0, 1/D]).reshape(DIM,1)
-	return g
 
 def JsigmaL(x, DIM):
 	x1 = x[0]

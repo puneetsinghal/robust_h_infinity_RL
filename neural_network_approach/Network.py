@@ -21,24 +21,17 @@ class Network(object):
 	
 		self.gamma = params['gamma']
 		self.dt = params['dt']
-
+		self.hiddenSize = params['hiddenSize']
 		self.generateNetwork(params)
 
 	def generateNetwork(self, params):
-		
-		self.input = tf.concat([self.X_t, self.X_tPlus],0)
-#         print("shape of final input: {}".format(self.input.shape))
-		
-		self.layer = self.input
-		self.layer = layers.fully_connected(inputs=self.layer, 
-											num_outputs=params['hiddenSize'], activation_fn=tf.nn.sigmoid)
-		self.layer = layers.fully_connected(inputs=self.layer, 
-											num_outputs=params['hiddenSize'], activation_fn=tf.nn.sigmoid)
-		self.layer = layers.fully_connected(inputs=self.layer,
-											num_outputs=params['hiddenSize'], activation_fn=tf.nn.sigmoid)
-		self.output = layers.fully_connected(inputs=self.layer, 
-											 num_outputs=1, activation_fn=None)
-		
+
+		if(params['robot']=='linear'):
+			self.createLayers_Linear()
+
+		elif(params['robot']=='RTAC'):
+			self.createLayers_RTAC()
+
 		self.value_t, self.value_tPlus = tf.split(self.output, num_or_size_splits=2, axis=0)
 #         print("shape of value_t: {}".format(self.value_t.shape))
 #         print("shape of value_tPlus: {}".format(self.value_tPlus.shape))
@@ -94,6 +87,30 @@ class Network(object):
 #         print(tf.reduce_sum(self.batch_gradients))
 #         print(zip(tf.reduce_sum(self.batch_gradients), local_vars))
 #         self.apply_grads = self.trainer.apply_gradients(zip(tf.reduce_sum(self.batch_gradients), local_vars))
+	
+	def createLayers_Linear(self):
+		self.input = tf.concat([self.X_t, self.X_tPlus],0)
+		self.layer = self.input
+		self.layer = layers.fully_connected(inputs=self.layer, 
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.layer = layers.fully_connected(inputs=self.layer, 
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.layer = layers.fully_connected(inputs=self.layer,
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.output = layers.fully_connected(inputs=self.layer, 
+											 num_outputs=1, activation_fn=None)
+
+	def createLayers_RTAC(self):
+		self.input = tf.concat([self.X_t, self.X_tPlus],0)
+		self.layer = self.input
+		self.layer = layers.fully_connected(inputs=self.layer, 
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.layer = layers.fully_connected(inputs=self.layer, 
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.layer = layers.fully_connected(inputs=self.layer,
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.output = layers.fully_connected(inputs=self.layer, 
+											 num_outputs=1, activation_fn=None)
 
 	def calculateResidualError(self):
 

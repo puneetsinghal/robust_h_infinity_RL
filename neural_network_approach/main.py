@@ -27,6 +27,7 @@ except ImportError:
 from Network import Network
 from Logger import Logger
 from robot import RTAC as RTAC
+from robot import LinearSystems as LinearSystems
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 config = tf.ConfigProto()
@@ -35,16 +36,6 @@ config.allow_soft_placement = True
 config.gpu_options.allow_growth = True
 config.gpu_options.per_process_gpu_memory_fraction = 1
 SESS = tf.Session(config=config)
-
-M  = 20
-dt = 0.033
-DIM = 4
-
-tspan = np.arange(0,60,dt) 
-
-T = tspan.size
-u = np.zeros(T)
-w = np.zeros(T)
 
 def make_log_dir(log_parent_dir):
 	import datetime, os
@@ -69,8 +60,8 @@ def train(robot, log_dir):
 	
 	U, W, X = robot.generateSystemData(control_generator, dt, T, M)
 
-	X_t = np.zeros([M*(T-1), DIM])
-	X_tPlus = np.zeros([M*(T-1), DIM])
+	X_t = np.zeros([M*(T-1), robot.DIM])
+	X_tPlus = np.zeros([M*(T-1), robot.DIM])
 	U_t = np.zeros([M*(T-1), 1, 1])
 	U_tPlus = np.zeros([M*(T-1), 1, 1])
 	W_t = np.zeros([M*(T-1), 1, 1])
@@ -84,16 +75,16 @@ def train(robot, log_dir):
 		W_t[k*(T-1):(k+1)*(T-1), 0, :] = W[k*T:(k+1)*T-1, :]
 		W_tPlus[k*(T-1):(k+1)*(T-1), 0, :] = W[k*T+1:(k+1)*T, :]
 
-	G_X_t = np.zeros([M*(T-1), DIM, 1])
-	G_X_tPlus = np.zeros([M*(T-1), DIM, 1])
-	K_X_t = np.zeros([M*(T-1), DIM, 1])
-	K_X_tPlus = np.zeros([M*(T-1), DIM, 1])
+	G_X_t = np.zeros([M*(T-1), robot.DIM, 1])
+	G_X_tPlus = np.zeros([M*(T-1), robot.DIM, 1])
+	K_X_t = np.zeros([M*(T-1), robot.DIM, 1])
+	K_X_tPlus = np.zeros([M*(T-1), robot.DIM, 1])
 
 	for j in range(M*(T-1)):
-		G_X_t[j, :, :] = g_function(X_t[j,:], DIM)
-		G_X_tPlus[j, :, :] = g_function(X_tPlus[j,:], DIM)
-		K_X_t[j, :, :] = k_function(X_t[j,:], DIM)
-		K_X_tPlus[j, :, :] = k_function(X_tPlus[j,:], DIM)
+		G_X_t[j, :, :] = robot.g_function(X_t[j,:])
+		G_X_tPlus[j, :, :] = robot.g_function(X_tPlus[j,:])
+		K_X_t[j, :, :] = robot.k_function(X_t[j,:])
+		K_X_tPlus[j, :, :] = robot.k_function(X_tPlus[j,:])
 
 	# Initialize the variables (i.e. assign their default value)
 	init = tf.global_variables_initializer()
@@ -124,29 +115,29 @@ def train(robot, log_dir):
 		if(step%10 == 0):
 			print("the error at step {} is: {}". format(step, average_error))
 
-		if(step%10 == 0 or step == 1):
+		if(step%100 == 0 or step == 1):
 			save_path = saver.save(SESS, modelName, write_meta_graph=True)
 			print("testing after step: {}".format(step))
-			test(robot, SESS, log_dir, True)
+			test(robot, SESS, log_dir, False)
 
 	save_path = saver.save(SESS, modelName, write_meta_graph=True)
 
-def test(robot, SESS, log_dir, avoidInit = False):
-	x0     = np.random.rand(DIM)
+def test(robot, SESS, log_dir, init_flag = True):
+	x0     = np.random.rand(robot.DIM)
 
 	newT = 100
 	dt = 0.033
 
 	totalPoints = int(newT/dt)
 
-	x = np.zeros([totalPoints,4])
+	x = np.zeros([totalPoints,robot.DIM])
 	x[0,:] = x0
 	robot.sess = SESS
 
 	filename 	= './' + log_dir + '/model_NN_pickleData'
 	modelName 	= './' + log_dir + '/model'
 
-	if not avoidInit:
+	if init_flag:
 		init = tf.global_variables_initializer()
 		saver = tf.train.Saver(max_to_keep=1)
 
@@ -156,7 +147,7 @@ def test(robot, SESS, log_dir, avoidInit = False):
 		saver.restore(SESS, tf.train.latest_checkpoint(log_dir))
 		print("Model restored.")
 
-	r = SCI_INT.ode(robot.dynamics).set_integrator("dopri5") 
+	r = SCI_INT.ode(robot.dynamics_test).set_integrator("dopri5") 
 	r.set_initial_value(x0, 0)
 	for i in range(1, totalPoints):
 		# embed()
@@ -170,29 +161,61 @@ def test(robot, SESS, log_dir, avoidInit = False):
 	plt.plot(t,x[:,0],'-b','linewidth',1.8)
 	plt.plot(t,x[:,1],'-r','linewidth',1.8)
 	plt.plot(t,x[:,2],'-m','linewidth',1.8)
-	plt.plot(t,x[:,3],'-k','linewidth',1.8)
+	if(robot.DIM==4):
+		plt.plot(t,x[:,3],'-k','linewidth',1.8)
 	plt.show()
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--mode', type=str, default='test')
 	parser.add_argument('--model', type=str, default=None)
+	parser.add_argument('--robot', type=str, default="linear") # linear/ RTAC
 	# parser.add_argument('--data', type=str, default=None)
 
 	args = parser.parse_args()
+	M  = 20
+	dt = 0.033
 
-	params = {}
-	params['hiddenSize'] = 8
-	params['dt'] = 0.033
-	params['learningRate'] = 1e-2
-	params['gamma'] = 6
-	params['numState'] = DIM
-	params['action_size'] = 1
-	params['disturbance_size'] = 1
+	if(args.robot == 'linear'):
+		params = {}
+		params['hiddenSize'] = 8
+		params['dt'] = 0.01
+		params['learningRate'] = 1e-3
+		params['gamma'] = 6
+		params['numState'] = 3
+		params['action_size'] = 1
+		params['disturbance_size'] = 1
+		params['robot'] = args.robot
+		
+		tspan = np.arange(0, 60, params['dt']) 
+
+		T = tspan.size
+		u = np.zeros(T)
+		w = np.zeros(T)
+
+		nn = Network(params)
+		robot = LinearSystems(params, tspan, u, w, nn)
+
+	elif(args.robot == 'RTAC'):
+		params = {}
+		params['hiddenSize'] = 16
+		params['dt'] = 0.033
+		params['learningRate'] = 1e-5
+		params['gamma'] = 6
+		params['numState'] = 4
+		params['action_size'] = 1
+		params['disturbance_size'] = 1
+		params['robot'] = args.robot
+
+		tspan = np.arange(0, 60, params['dt']) 
+
+		T = tspan.size
+		u = np.zeros(T)
+		w = np.zeros(T)
+
+		nn = Network(params)
+		robot = RTAC(params, tspan, u, w, nn)
 	
-	
-	nn = Network(params)
-	robot = RTAC(DIM, tspan, u, w, nn)
 	#     L = sigmaL(np.zeros(DIM)).size
 	if(args.mode == 'train'):
 		log_dir 	= make_log_dir('')
@@ -202,6 +225,7 @@ if __name__=='__main__':
 		control_generator = generateInputFunction(tspan)
 		train(robot, log_dir)
 		test(robot, SESS, log_dir)
+
 	if(args.mode == 'test'):
 		test(robot, SESS, args.model)
 
