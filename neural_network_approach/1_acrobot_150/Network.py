@@ -109,12 +109,7 @@ class Network(object):
 											 num_outputs=1, activation_fn=None)
 
 	def createLayers_Acrobot(self):
-		self.input = tf.concat([self.X_t, self.X_tPlus], 0)
-		# angles, velocities = tf.split(self.input, num_or_size_splits=2, axis=1)
-		# self.sines = tf.sin(angles)
-		# self.cosines = tf.cos(angles)
-		# self.input = tf.angle(tf.complex(self.cosines, self.sines))
-		# self.input = tf.concat([self.input, velocities], 0)
+		self.input = tf.concat([self.X_t, self.X_tPlus],0)
 		self.layer = self.input
 		self.layer = layers.fully_connected(inputs=self.layer, 
 											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
@@ -129,11 +124,11 @@ class Network(object):
 		self.input = tf.concat([self.X_t, self.X_tPlus],0)
 		self.layer = self.input
 		self.layer = layers.fully_connected(inputs=self.layer, 
-											num_outputs=self.hiddenSize, activation_fn=tf.nn.tanh)
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
 		self.layer = layers.fully_connected(inputs=self.layer, 
-											num_outputs=self.hiddenSize, activation_fn=tf.nn.tanh)
-		# self.layer = layers.fully_connected(inputs=self.layer,
-		# 									num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.layer = layers.fully_connected(inputs=self.layer,
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
 		self.layer = layers.dropout(self.layer, self.dropout_prob)
 		self.output = layers.fully_connected(inputs=self.layer, 
 											 num_outputs=1, activation_fn=None)

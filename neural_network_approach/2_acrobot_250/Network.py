@@ -129,11 +129,11 @@ class Network(object):
 		self.input = tf.concat([self.X_t, self.X_tPlus],0)
 		self.layer = self.input
 		self.layer = layers.fully_connected(inputs=self.layer, 
-											num_outputs=self.hiddenSize, activation_fn=tf.nn.tanh)
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
 		self.layer = layers.fully_connected(inputs=self.layer, 
-											num_outputs=self.hiddenSize, activation_fn=tf.nn.tanh)
-		# self.layer = layers.fully_connected(inputs=self.layer,
-		# 									num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
+		self.layer = layers.fully_connected(inputs=self.layer,
+											num_outputs=self.hiddenSize, activation_fn=tf.nn.sigmoid)
 		self.layer = layers.dropout(self.layer, self.dropout_prob)
 		self.output = layers.fully_connected(inputs=self.layer, 
 											 num_outputs=1, activation_fn=None)

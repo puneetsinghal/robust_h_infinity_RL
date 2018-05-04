@@ -11,13 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from time import sleep
-import time
 import pickle
 from IPython import embed
 from scipy import integrate as SCI_INT
 import h5py
 import shutil
-import scipy.io as spio
 
 try:
 	from StringIO import StringIO
@@ -102,7 +100,7 @@ def train(robot, log_dir, dropout_prob, numIterations=3000):
 	init = tf.global_variables_initializer()
 
 	# Add ops to save and restore all the variables.
-	saver = tf.train.Saver(max_to_keep=100)
+	saver = tf.train.Saver(max_to_keep=1)
 
 	SESS.run(init)
 	# save_path = saver.save(SESS, './')
@@ -118,7 +116,6 @@ def train(robot, log_dir, dropout_prob, numIterations=3000):
 
 	# feed_dict = {nn.X_t:X_t, nn.X_tPlus:X_tPlus, nn.U_t:U_t, nn.U_tPlus:U_tPlus, nn.W_t:W_t, nn.W_tPlus:W_tPlus,
 	# 			nn.G_X_t:G_X_t, nn.G_X_tPlus:G_X_tPlus, nn.K_X_t:K_X_t, nn.K_X_tPlus:K_X_tPlus}
-	startTime = time.time()
 	for step in range(1, numIterations):
 		batchIndex = np.random.choice(M*(T-1), 10000)
 		feed_dict = {nn.X_t:X_t[batchIndex], nn.X_tPlus:X_tPlus[batchIndex], nn.U_t:U_t[batchIndex], 
@@ -132,15 +129,15 @@ def train(robot, log_dir, dropout_prob, numIterations=3000):
 			print("the error at step {} is: {}". format(step, average_error))
 
 		if(step%50 == 0 or step == 1):
-			save_path = saver.save(SESS, (modelName + '_' + str(step)), write_meta_graph=True)
-			print("testing after step: {} and time {}".format(step, (time.time() - startTime)))
+			save_path = saver.save(SESS, modelName, write_meta_graph=True)
+			print("testing after step: {}".format(step))
 			test(robot, SESS, log_dir, False)
 
 	save_path = saver.save(SESS, modelName, write_meta_graph=True)
 
 def test(robot, SESS, log_dir, init_flag = True):
 	# x0     = np.random.uniform(-1,1,robot.DIM)
-	x0 = np.array([np.random.uniform(-1, 1, 1), np.random.uniform(-1, 1, 1), 0, 0])
+	x0 = np.array([np.random.uniform(-1,1,1), np.random.uniform(-1,1,1), 0, 0])
 	newT = 100
 	dt = 0.033
 
@@ -178,11 +175,11 @@ def test(robot, SESS, log_dir, init_flag = True):
 	plt.rc('text', usetex=True)
 	plt.rc('font', family='serif')
 	plt.subplot(2, 1, 1)
-	x1, = plt.plot(t,x[:,0],'b',label='x1')
-	x2, = plt.plot(t,x[:,1],'r',label='x2')
-	x3, = plt.plot(t,x[:,2],'m',label='x3')
+	x1,=plt.plot(t,x[:,0],'b',label='x1')
+	x2,=plt.plot(t,x[:,1],'r',label='x2')
+	x3,=plt.plot(t,x[:,2],'m',label='x3')
 	if(robot.DIM==4):
-		x4, = plt.plot(t,x[:,3],'k',label='x4')
+		x4,=plt.plot(t,x[:,3],'k',label='x4')
 		plt.legend([x1,x2,x3,x4], ['$x_1$','$x_2$','$x_3$', '$x_4$'])
 	else:
 		plt.legend([x1,x2,x3], ['$x_1$','$x_2$','$x_3$'])
@@ -255,9 +252,9 @@ def get_stats_test(robot, SESS, log_dir, init_flag = True):
 	plt.figure(1)
 	plt.plot(CX,'-b')
 	plt.xlabel('trials', fontsize=15)
-	plt.ylabel('Error', fontsize=15)
-	plt.title('Average error at end of 100 seconds', fontsize=15)
-	plt.tick_params(labelsize=15)
+    plt.ylabel('Error', fontsize=15)
+    plt.title('Average error at end of 100 seconds', fontsize=15)
+    plt.tick_params(labelsize=15)
 	plt.show()
 	mean = np.mean(CX)
 	std  = np.std(CX)
@@ -358,10 +355,10 @@ if __name__=='__main__':
 	elif(args.robot == 'planarRR'):
 		params = {}
 		params['hiddenSize'] = 8
-		params['dt'] = 0.01
-		params['learningRate'] = 1e-5
+		params['dt'] = 0.033
+		params['learningRate'] = 1e-3
 		params['numIterations'] = 10000
-		params['gamma'] = 1
+		params['gamma'] = 6
 		params['numState'] = 4
 		params['action_size'] = 2
 		params['disturbance_size'] = 2
@@ -376,7 +373,7 @@ if __name__=='__main__':
 		params['I1'] = 0.1
 		params['I2'] = 0.1
 
-		tspan = np.arange(0, 1, params['dt']) 
+		tspan = np.arange(0, 0.1, params['dt']) 
 
 		T = tspan.size
 		u = np.zeros([2,T])
@@ -384,7 +381,7 @@ if __name__=='__main__':
 
 		nn = Network(params)
 		robot = PlanarRR(params, tspan, u, w, nn)
-		robot.M  = 100
+		robot.M  = 300
 		robot.T = T
 		robot.dt = params['dt']
 
