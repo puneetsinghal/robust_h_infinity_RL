@@ -366,7 +366,7 @@ if __name__=='__main__':
 		params['action_size'] = 2
 		params['disturbance_size'] = 2
 		params['robot'] = args.robot
-		params['dropout_prob'] = 1.0
+		params['dropout_prob'] = 0.9
 
 		params['m1'] = 1.
 		params['m2'] = 1.
@@ -384,7 +384,7 @@ if __name__=='__main__':
 
 		nn = Network(params)
 		robot = PlanarRR(params, tspan, u, w, nn)
-		robot.M  = 300
+		robot.M  = 100
 		robot.T = T
 		robot.dt = params['dt']
 
